@@ -12,11 +12,12 @@ const mapOptions = {
   mapId: process.env.NEXT_PUBLIC_MAP_ID,
   center: { lat: 43.66293, lng: -79.39314 },
   zoom: 18,
-  disableDefaultUI: true,
+  // disableDefaultUI: true,
   heading: 25,
   tilt: 60,
 };
 
+// render map
 export default function App() {
   return (
     <Wrapper apiKey={process.env.NEXT_PUBLIC_MAP_API_KEY}>
@@ -25,11 +26,13 @@ export default function App() {
   );
 }
 
+// Creating Map
 function MyMap() {
-  const [route, setRoute] = useState(null);
+  const [route, setRoute] = useState(null); // Drawing root in between two points
   const [map, setMap] = useState();
   const ref = useRef();
 
+  // It will run after the first render
   useEffect(() => {
     setMap(new window.google.maps.Map(ref.current, mapOptions));
   }, []);
@@ -43,10 +46,98 @@ function MyMap() {
   );
 }
 
+//Animation
+const ANIMATION_MS = 20000;
+const FRONT_VECTOR = new Vector3(0, -1, 0);
+
+function Animate({ route, map }) {
+  const overlayRef = useRef();
+  const trackRef = useRef();
+  const humanRef = useRef();
+
+  useEffect(() => {
+    map.setCenter(route[Math.floor(route.length / 2)], 17);
+
+    if (!overlayRef.current) {
+      overlayRef.current = new ThreejsOverlayView(mapOptions.center);
+      overlayRef.current.setMap(map);
+    }
+
+    const scene = overlayRef.current.getScene();
+    const points = route.map((p) => overlayRef.current.latLngAltToVector3(p));
+    const curve = new CatmullRomCurve3(points); // Line of path
+
+    //Track
+    if (trackRef.current) {
+      scene.remove(trackRef.current);
+    }
+    trackRef.current = createTrackFromCurve(curve);
+    scene.add(trackRef.current);
+
+    //Model
+    loadModel().then((model) => {
+      if (humanRef.current) {
+        scene.remove(humanRef.current);
+      }
+      humanRef.current = model;
+      scene.add(humanRef.current);
+    });
+
+    // every time it render
+    overlayRef.current.update = () => {
+      trackRef.current.material.resolution.copy(
+        overlayRef.current.getViewportSize()
+      );
+
+      // Human Animation
+      if (humanRef.current) {
+        const progress = (performance.now() % ANIMATION_MS) / ANIMATION_MS;
+        curve.getPointAt(progress, humanRef.current.position);
+        humanRef.current.quaternion.setFromUnitVectors(
+          FRONT_VECTOR,
+          curve.getTangentAt(progress)
+        );
+        humanRef.current.rotateX(Math.PI / 2);
+      }
+
+      overlayRef.current.requestRedraw();
+    };
+
+    return () => {
+      scene.remove(trackRef.current);
+      scene.remove(humanRef.current);
+    };
+  }, [route]);
+}
+
+function createTrackFromCurve(curve) {
+  const points = curve.getSpacedPoints(curve.points.length * 4);
+  const positions = points.map((point) => point.toArray()).flat();
+
+  return new Line2(
+    new LineGeometry().setPositions(positions),
+    new LineMaterial({
+      color: 0xffb703, // line color
+      linewidth: 5, // line width
+    })
+  );
+}
+
+async function loadModel() {
+  const loader = new GLTFLoader();
+  const object = await loader.loadAsync("/man_walking/scene.gltf");
+  const group = object.scene;
+  group.scale.setScalar(5);
+
+  return group;
+}
+
+// Directions
 function Directions({ setRoute }) {
   const [origin] = useState("27 Front St E Toronto");
   const [destination] = useState("75 Yonge Street Toronto");
 
+  // It will run after change of destination
   useEffect(() => {
     fetchDirections(origin, destination, setRoute);
   }, [origin, destination]);
@@ -60,86 +151,4 @@ function Directions({ setRoute }) {
       <p>{destination}</p>
     </div>
   );
-}
-
-const ANIMATION_MS = 10000;
-const FRONT_VECTOR = new Vector3(0, -1, 0);
-
-function Animate({ route, map }) {
-  const overlayRef = useRef();
-  const trackRef = useRef();
-  const carRef = useRef();
-
-  useEffect(() => {
-    map.setCenter(route[Math.floor(route.length / 2)], 17);
-
-    if (!overlayRef.current) {
-      overlayRef.current = new ThreejsOverlayView(mapOptions.center);
-      overlayRef.current.setMap(map);
-    }
-
-    const scene = overlayRef.current.getScene();
-    const points = route.map((p) => overlayRef.current.latLngAltToVector3(p));
-    const curve = new CatmullRomCurve3(points);
-
-    if (trackRef.current) {
-      scene.remove(trackRef.current);
-    }
-    trackRef.current = createTrackFromCurve(curve);
-    scene.add(trackRef.current);
-
-    loadModel().then((model) => {
-      if (carRef.current) {
-        scene.remove(carRef.current);
-      }
-      carRef.current = model;
-      scene.add(carRef.current);
-    });
-
-    overlayRef.current.update = () => {
-      trackRef.current.material.resolution.copy(
-        overlayRef.current.getViewportSize()
-      );
-
-      if (carRef.current) {
-        const progress = (performance.now() % ANIMATION_MS) / ANIMATION_MS;
-        curve.getPointAt(progress, carRef.current.position);
-        carRef.current.quaternion.setFromUnitVectors(
-          FRONT_VECTOR,
-          curve.getTangentAt(progress)
-        );
-        carRef.current.rotateX(Math.PI / 2);
-      }
-
-      overlayRef.current.requestRedraw();
-    };
-
-    return () => {
-      scene.remove(trackRef.current);
-      scene.remove(carRef.current);
-    };
-  }, [route]);
-}
-
-function createTrackFromCurve(curve) {
-  const points = curve.getSpacedPoints(curve.points.length * 10);
-  const positions = points.map((point) => point.toArray()).flat();
-
-  return new Line2(
-    new LineGeometry().setPositions(positions),
-    new LineMaterial({
-      color: 0xffb703,
-      linewidth: 8,
-    })
-  );
-}
-
-async function loadModel() {
-  const loader = new GLTFLoader();
-  // This work is based on "Low poly Car" (https://sketchfab.com/3d-models/low-poly-car-f822f0c500a24ca9ac2af183d2e630b4) by reyad.bader (https://sketchfab.com/reyad.bader) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-  const object = await loader.loadAsync("/low_poly_car/scene.gltf");
-  const group = object.scene;
-  group.scale.setScalar(0.5);
-
-  return group;
 }

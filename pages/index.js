@@ -7,7 +7,7 @@ export default function App() {
         <Link href="/car">ThreeJS Car</Link>
       </li>
       <li>
-        <Link href="/intro">ThreeJS Intro</Link>
+        <Link href="/intro">ThreeJS Scooter</Link>
       </li>
       <li>
         <Link href="/markers">Advanced Markers</Link>

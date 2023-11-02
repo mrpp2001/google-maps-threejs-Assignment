@@ -1,0 +1,11 @@
+Model Information:
+* title:	Woman Walking
+* source:	https://sketchfab.com/3d-models/woman-walking-7fdd3ab66966442db81cc8a7f4f741aa
+* author:	Arion Digital (https://sketchfab.com/andrewswihart)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Woman Walking" (https://sketchfab.com/3d-models/woman-walking-7fdd3ab66966442db81cc8a7f4f741aa) by Arion Digital (https://sketchfab.com/andrewswihart) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
