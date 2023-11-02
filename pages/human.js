@@ -54,10 +54,20 @@ async function loadModel() {
   const group = object.scene;
   group.scale.setScalar(5);
 
- // Add walking animation to the model here
- const mixer = new THREE.AnimationMixer(group);
- const action = mixer.clipAction(object.animations[22]); // Adjust the index as per your animation data
- action.play();
+  // Find the animation clip by name
+  const mixer = new THREE.AnimationMixer(group);
+  let walkAction = null;
+  object.animations.forEach((clip, index) => {
+    if (clip.name.toLowerCase().includes('walk')) {
+      walkAction = mixer.clipAction(clip);
+    }
+  });
+
+  if (!walkAction) {
+    console.error("No 'Walk' animation found in the provided GLTF file.");
+  } else {
+    walkAction.play();
+  }
 
  return { group, mixer }; // Return both the group and the mixer
 }
@@ -107,8 +117,6 @@ function Animate({ route, map }) {
         if (mixer) {
           mixer.update(delta);
         }
-
-        // Additional logic for updating the position and rotation of the model
 
         overlayRef.current.requestRedraw();
       };
