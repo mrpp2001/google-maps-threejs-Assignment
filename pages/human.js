@@ -7,6 +7,8 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import fetchDirections from "../src/fetchDirections";
+import * as THREE from "three";
+
 
 const mapOptions = {
   mapId: process.env.NEXT_PUBLIC_MAP_ID,
@@ -46,6 +48,20 @@ function MyMap() {
   );
 }
 
+async function loadModel() {
+  const loader = new GLTFLoader();
+  const object = await loader.loadAsync("/man_walking/Punk.gltf");
+  const group = object.scene;
+  group.scale.setScalar(5);
+
+ // Add walking animation to the model here
+ const mixer = new THREE.AnimationMixer(group);
+ const action = mixer.clipAction(object.animations[0]); // Adjust the index as per your animation data
+ action.play();
+
+ return { group, mixer }; // Return both the group and the mixer
+}
+
 //Animation
 const ANIMATION_MS = 20000;
 const FRONT_VECTOR = new Vector3(0, -1, 0);
@@ -75,12 +91,28 @@ function Animate({ route, map }) {
     scene.add(trackRef.current);
 
     //Model
-    loadModel().then((model) => {
+    loadModel().then(({ group, mixer }) => {
       if (humanRef.current) {
         scene.remove(humanRef.current);
       }
-      humanRef.current = model;
+      humanRef.current = group;
       scene.add(humanRef.current);
+
+      // Update the animation on each frame
+      const clock = new THREE.Clock();
+      const animateModel = () => {
+        requestAnimationFrame(animateModel);
+
+        const delta = clock.getDelta();
+        if (mixer) {
+          mixer.update(delta);
+        }
+
+        // Additional logic for updating the position and rotation of the model
+
+        overlayRef.current.requestRedraw();
+      };
+      animateModel();
     });
 
     // every time it render
@@ -107,6 +139,8 @@ function Animate({ route, map }) {
       scene.remove(trackRef.current);
       scene.remove(humanRef.current);
     };
+
+    
   }, [route]);
 }
 
@@ -123,14 +157,7 @@ function createTrackFromCurve(curve) {
   );
 }
 
-async function loadModel() {
-  const loader = new GLTFLoader();
-  const object = await loader.loadAsync("/man_walking/scene.gltf");
-  const group = object.scene;
-  group.scale.setScalar(5);
 
-  return group;
-}
 
 // Directions
 function Directions({ setRoute }) {
