@@ -56,14 +56,14 @@ async function loadModel() {
 
  // Add walking animation to the model here
  const mixer = new THREE.AnimationMixer(group);
- const action = mixer.clipAction(object.animations[0]); // Adjust the index as per your animation data
+ const action = mixer.clipAction(object.animations[22]); // Adjust the index as per your animation data
  action.play();
 
  return { group, mixer }; // Return both the group and the mixer
 }
 
 //Animation
-const ANIMATION_MS = 20000;
+const ANIMATION_MS = 40000;
 const FRONT_VECTOR = new Vector3(0, -1, 0);
 
 function Animate({ route, map }) {
