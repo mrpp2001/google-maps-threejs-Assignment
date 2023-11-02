@@ -52,7 +52,7 @@ async function loadModel() {
   const loader = new GLTFLoader();
   const object = await loader.loadAsync("/man_walking/Punk.gltf");
   const group = object.scene;
-  group.scale.setScalar(5);
+  group.scale.setScalar(8);
 
   // Find the animation clip by name
   const mixer = new THREE.AnimationMixer(group);
@@ -73,7 +73,7 @@ async function loadModel() {
 }
 
 //Animation
-const ANIMATION_MS = 40000;
+const ANIMATION_MS = 50000;
 const FRONT_VECTOR = new Vector3(0, -1, 0);
 
 function Animate({ route, map }) {
@@ -159,8 +159,8 @@ function createTrackFromCurve(curve) {
   return new Line2(
     new LineGeometry().setPositions(positions),
     new LineMaterial({
-      color: 0xffb703, // line color
-      linewidth: 5, // line width
+      color: '#ff0000',
+      linewidth: 10, 
     })
   );
 }
@@ -169,9 +169,9 @@ function createTrackFromCurve(curve) {
 
 // Directions
 function Directions({ setRoute }) {
-  const [origin] = useState("27 Front St E Toronto");
-  const [destination] = useState("75 Yonge Street Toronto");
-
+  const [origin] = useState("SPG Media & Video production company1 Yonge St Toronto");
+  const [destination] = useState("theScore 125 Queens Quay E Toronto");
+  
   // It will run after change of destination
   useEffect(() => {
     fetchDirections(origin, destination, setRoute);
