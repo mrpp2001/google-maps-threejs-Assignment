@@ -41,7 +41,8 @@ a {
   top: 1rem;
   right: 1rem;
   width: 25%;
-  padding: 1rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
 }
 
 #map {
