@@ -64,7 +64,7 @@ async function loadModel() {
   });
 
   if (!walkAction) {
-    console.error("No 'Walk' animation found in the provided GLTF file.");
+    console.error("Walking animation found.");
   } else {
     walkAction.play();
   }
